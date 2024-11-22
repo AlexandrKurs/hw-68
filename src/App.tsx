@@ -1,7 +1,12 @@
 import {useCallback, useEffect, useState} from "react";
 import {useAppDispatch, useAppSelector} from "./app/hooks.ts";
-import {selectAddTaskLoading, selectAllTasks, selectFetchTasksLoading} from "./store/slices/toDoSlice.ts";
-import {addNewTask, fetchAllTasks} from "./store/thunks/toDo/toDoThunks.ts";
+import {
+    selectAddTaskLoading,
+    selectAllTasks,
+    selectDeleteTaskLoading,
+    selectFetchTasksLoading
+} from "./store/slices/toDoSlice.ts";
+import {addNewTask, deleteTaskById, fetchAllTasks} from "./store/thunks/toDo/toDoThunks.ts";
 import {Spinner} from "react-bootstrap";
 
 const initialStateToForm = {
@@ -13,27 +18,37 @@ const App = () => {
 
     const addLoading = useAppSelector(selectAddTaskLoading);
     const fetchLoading = useAppSelector(selectFetchTasksLoading);
+    const deleteLoading = useAppSelector(selectDeleteTaskLoading);
     const allTasks = useAppSelector(selectAllTasks);
     const dispatch = useAppDispatch();
-    const [task, setCase] = useState<ITaskForm>(initialStateToForm);
+    const [task, setTask] = useState<ITaskForm>(initialStateToForm);
 
     const onChangeInput = (e: React.ChangeEvent<HTMLInputElement>) => {
         const {name, value} = e.target;
 
-        setCase(prevState => ({
+        setTask(prevState => ({
             ...prevState,
             [name]: value,
         }));
     };
 
-    const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        dispatch(addNewTask({...task}));
-    };
-
     const fetchTasks = useCallback(async () => {
         await dispatch(fetchAllTasks());
     }, [dispatch]);
+
+    const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        await dispatch(addNewTask({...task}));
+        await fetchTasks();
+        setTask(initialStateToForm);
+    };
+
+    const deleteTask = async (id?: string) => {
+        if (id) {
+            await dispatch(deleteTaskById(id));
+        }
+        await fetchTasks();
+    };
 
     useEffect(() => {
         void fetchTasks();
@@ -61,13 +76,18 @@ const App = () => {
             <hr/>
 
             <div>
-                {fetchLoading ? <Spinner/> :
+                {fetchLoading || deleteLoading ? <Spinner/> :
                     <>
                         {allTasks.length === 0 ? <p>No tasks yet</p> :
                             <>
                                 {allTasks.map((task) => (
-                                    <div key={task.id} className="border border-black p-4 mb-3 w-50 mx-auto d-flex justify-content-between align-items-center">
+                                    <div key={task.id}
+                                         className="border border-black p-4 mb-3 w-50 mx-auto d-flex justify-content-between align-items-center">
+                                        <input type="checkbox" value={String(task.status)}/>
                                         <div>{task.title}</div>
+                                        <div className="d-flex justify-content-between">
+                                            <button onClick={() => deleteTask(task.id)} type="button" className="btn btn-danger">Delete</button>
+                                        </div>
                                     </div>
                                 ))}
                             </>
