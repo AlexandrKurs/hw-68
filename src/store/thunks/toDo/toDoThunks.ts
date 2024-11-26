@@ -31,3 +31,12 @@ export const deleteTaskById = createAsyncThunk<void, string>(
     await axiosAPI.delete(`toDo/${taskId}.json`)
   }
 )
+
+export const changeTaskStatus = createAsyncThunk<void, ITask> (
+  'toDo/changeTaskStatus',
+  async (task) => {
+    const taskToSend = {...task};
+    delete taskToSend.id;
+    await axiosAPI.put(`toDo/${task.id}.json`, taskToSend);
+  }
+)

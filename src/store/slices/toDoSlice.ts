@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { addNewTask, deleteTaskById, fetchAllTasks } from '../thunks/toDo/toDoThunks.ts';
+import { addNewTask, changeTaskStatus, deleteTaskById, fetchAllTasks } from '../thunks/toDo/toDoThunks.ts';
 import { RootState } from '../../app/store.ts';
 
 interface ToDoState {
@@ -8,6 +8,7 @@ interface ToDoState {
     fetching: boolean;
     add: boolean;
     delete:boolean;
+    change: boolean;
   }
 }
 
@@ -17,12 +18,14 @@ const initialState: ToDoState = {
     fetching: false,
     add: false,
     delete: false,
+    change: false,
   }
 };
 
 export const selectAddTaskLoading = (state: RootState) => state.toDo.loadings.add;
 export const selectFetchTasksLoading = (state: RootState) => state.toDo.loadings.fetching;
 export const selectDeleteTaskLoading = (state: RootState) => state.toDo.loadings.delete;
+export const selectChangeTaskLoading = (state: RootState) => state.toDo.loadings.change;
 export const selectAllTasks = (state: RootState) => state.toDo.tasks;
 
 export const toDoSlice = createSlice({
@@ -58,6 +61,15 @@ export const toDoSlice = createSlice({
       })
       .addCase(deleteTaskById.rejected, (state) => {
         state.loadings.delete = false;
+      })
+      .addCase(changeTaskStatus.pending, (state) => {
+        state.loadings.change = true;
+      })
+      .addCase(changeTaskStatus.fulfilled, (state) => {
+        state.loadings.change = false;
+      })
+      .addCase(changeTaskStatus.rejected, (state) => {
+        state.loadings.change = false;
       })
   }
 });

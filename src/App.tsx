@@ -6,7 +6,7 @@ import {
     selectDeleteTaskLoading,
     selectFetchTasksLoading
 } from "./store/slices/toDoSlice.ts";
-import {addNewTask, deleteTaskById, fetchAllTasks} from "./store/thunks/toDo/toDoThunks.ts";
+import { addNewTask, changeTaskStatus, deleteTaskById, fetchAllTasks } from './store/thunks/toDo/toDoThunks.ts';
 import {Spinner} from "react-bootstrap";
 
 const initialStateToForm = {
@@ -18,6 +18,7 @@ const App = () => {
 
     const addLoading = useAppSelector(selectAddTaskLoading);
     const fetchLoading = useAppSelector(selectFetchTasksLoading);
+    const changeLoading = useAppSelector(selectFetchTasksLoading);
     const deleteLoading = useAppSelector(selectDeleteTaskLoading);
     const allTasks = useAppSelector(selectAllTasks);
     const dispatch = useAppDispatch();
@@ -50,6 +51,13 @@ const App = () => {
         await fetchTasks();
     };
 
+    const makeTaskDone = async (task: ITask) => {
+      const copyTask = {...task};
+      copyTask.status = !copyTask.status;
+      await dispatch(changeTaskStatus(copyTask));
+      await fetchTasks();
+    }
+
     useEffect(() => {
         void fetchTasks();
     },[]);
@@ -76,14 +84,14 @@ const App = () => {
             <hr/>
 
             <div>
-                {fetchLoading || deleteLoading ? <Spinner/> :
+                {fetchLoading || deleteLoading || changeLoading ? <Spinner/> :
                     <>
                         {allTasks.length === 0 ? <p>No tasks yet</p> :
                             <>
                                 {allTasks.map((task) => (
                                     <div key={task.id}
                                          className="border border-black p-4 mb-3 w-50 mx-auto d-flex justify-content-between align-items-center">
-                                        <input type="checkbox" value={String(task.status)}/>
+                                        <input type="checkbox" checked={task.status} onChange={() => makeTaskDone(task)} />
                                         <div>{task.title}</div>
                                         <div className="d-flex justify-content-between">
                                             <button onClick={() => deleteTask(task.id)} type="button" className="btn btn-danger">Delete</button>
